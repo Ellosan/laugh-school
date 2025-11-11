@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laugh School — Admin</title>
+  <meta name="theme-color" content="#0b1220">
+  <style>
+    :root{ --bg:#0b1220; --text:#e5e7eb; --muted:#9ca3af; --ring:#ffffff40; --border:#ffffff1a; --good:#34d399; --warn:#f59e0b; --bad:#ef4444 }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b1220,#030712);color:var(--text);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .container{max-width:1000px;margin:0 auto;padding:24px 16px 64px}
+    .nav{position:sticky;top:0;backdrop-filter:blur(8px);background:#030712cc;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{height:36px;width:36px;border-radius:14px;background:#ffffff1a;display:grid;place-items:center;font-size:20px}
+    .title{font-weight:900;font-size:20px}
+    a.link{color:#fff;text-decoration:none;padding:8px 12px;border-radius:10px}
+    a.link:hover{background:#ffffff14}
+
+    .muted{color:var(--muted)} .tiny{font-size:12px}
+    .card{background:linear-gradient(180deg,#18203599,#0f172a99);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px #0008;padding:16px}
+    .field-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .col{display:grid;gap:12px}
+    input,button{font:inherit}
+    input{background:#ffffff10;border:1px solid var(--border);border-radius:10px;color:#e5e7eb;padding:10px;outline:none}
+    input:focus{box-shadow:0 0 0 3px var(--ring)}
+    .btn{background:#ffffff10;border:1px solid var(--border);color:#fff;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .btn:hover{background:#ffffff18}
+    .btn.good{background:var(--good);color:#05220e;border-color:transparent}
+    .btn.warn{background:var(--warn);color:#221705;border-color:transparent}
+    .btn.bad{background:var(--bad);border-color:transparent}
+    .media{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:8px}
+    .media img,.media video{width:100%;height:auto;display:block;background:#000}
+  </style>
+</head>
+<body>
+<header class="nav">
+  <div class="brand">
+    <div class="logo">😂</div>
+    <div class="title">Laugh School</div>
+  </div>
+  <nav>
+    <a class="link" href="upload.html">Upload</a>
+  </nav>
+</header>
+
+<main class="container">
+  <h1>Admin dashboard</h1>
+  <p class="muted">Approve, hide, edit, delete posts and reset poll votes.</p>
+
+  <div id="authGate" class="card">
+    <p class="muted">Restricted area — enter password to continue.</p>
+    <div class="field-row">
+      <input id="adminPass" type="password" placeholder="Admin password" />
+      <button id="unlockBtn" class="btn">Unlock Admin</button>
+    </div>
+    <p class="tiny muted">Note: client‑side auth is for demos only.</p>
+  </div>
+
+  <section id="adminPanel" class="hidden">
+    <div class="field-row" style="justify-content:space-between">
+      <input id="searchBox" placeholder="Search…" style="flex:1" />
+      <button id="signOut" class="btn">Sign out</button>
+    </div>
+    <div id="adminList" class="col" style="margin-top:12px"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const STORAGE_KEY = "laughschool_items_v1";
+  const ADMIN_SESSION_KEY = "laughschool_admin_session";
+  const ADMIN_PASSWORD = "LAUGHSCHOOLSERVER2025"; // demo only
+
+  function save(items){ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]") }catch(e){ return [] } }
+  function setAdminSession(val){ sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(!!val)); }
+  function getAdminSession(){ try{ return JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY)||"false") }catch(e){ return false } }
+
+  const gate = document.getElementById("authGate");
+  const panel = document.getElementById("adminPanel");
+  const passInput = document.getElementById("adminPass");
+  const unlockBtn = document.getElementById("unlockBtn");
+  const signOut = document.getElementById("signOut");
+  const searchBox = document.getElementById("searchBox");
+  const list = document.getElementById("adminList");
+
+  function check(){ if(getAdminSession()){ gate.classList.add("hidden"); panel.classList.remove("hidden"); render(); } }
+  check();
+
+  unlockBtn.addEventListener("click", ()=>{
+    const val = passInput.value;
+    if(val===ADMIN_PASSWORD){ setAdminSession(true); check(); }
+    else alert("Incorrect password");
+  });
+  signOut.addEventListener("click", ()=>{ setAdminSession(false); location.reload(); });
+  searchBox.addEventListener("input", render);
+
+  function adminItemTemplate(it){
+    const created = new Date(it.createdAt).toLocaleString();
+    const media = it.type==="image"
+      ? `<figure class="media"><img src="${it.dataURL}"></figure>`
+      : it.type==="video" ? `<div class="media"><video src="${it.dataURL}" controls preload="metadata"></video></div>`
+      : pollEditor(it);
+
+    return `
+      <div class="card">
+        <div class="field-row" style="justify-content:space-between;gap:8px">
+          <div class="field-row" style="gap:10px">
+            <span style="font-size:12px;font-weight:800;text-transform:uppercase;opacity:.9">${it.type}</span>
+            <input data-edit="title" value="${escapeHTML(it.title)}" />
+          </div>
+          <div class="field-row">
+            <button data-action="approve" class="btn ${it.approved?'good':'warn'}">${it.approved?'Approved':'Pending'}</button>
+            <button data-action="delete" class="btn bad">Delete</button>
+          </div>
+        </div>
+        ${it.type!=="poll" ? `
+          <div class="field-row" style="margin-top:8px">
+            <span class="tiny muted" style="min-width:60px">Caption</span>
+            <input data-edit="caption" value="${escapeHTML(it.caption||'')}" />
+          </div>` : ""}
+        <div class="tiny muted" style="margin-top:6px">Created ${created} • 😂 ${it.laughs||0}</div>
+        <div style="margin-top:8px">${media}</div>
+      </div>
+    `;
+  }
+
+  function pollEditor(it){
+    const rows = it.poll.options.map((o,i)=>`
+      <div class="field-row">
+        <input value="${escapeHTML(o.text)}" data-opt-idx="${i}" />
+        <span class="tiny muted">${o.votes||0} votes</span>
+      </div>
+    `).join("");
+    return `
+      <div class="card">
+        <div class="tiny muted">Poll options</div>
+        <div class="col">${rows}</div>
+        <div class="field-row" style="margin-top:8px">
+          <button data-action="reset" class="btn">Reset votes</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function render(){
+    const q = (searchBox.value||"").toLowerCase().trim();
+    const data = load().filter(it=>{
+      if(!q) return true;
+      return [it.title, it.caption, it?.poll?.question].filter(Boolean).some(s=>(s||"").toLowerCase().includes(q));
+    });
+    list.innerHTML = data.map(adminItemTemplate).join("");
+
+    // wire events after render
+    list.querySelectorAll('[data-edit="title"]').forEach(inp=>{
+      inp.addEventListener("blur", e=>{
+        const card = e.target.closest('.card');
+        const idx = Array.from(list.children).indexOf(card);
+        const all = load();
+        const it = data[idx];
+        const actualIndex = all.findIndex(x=>x.id===it.id);
+        if(actualIndex>-1){ all[actualIndex].title = e.target.value; save(all); }
+      });
+    });
+    list.querySelectorAll('[data-edit="caption"]').forEach(inp=>{
+      inp.addEventListener("blur", e=>{
+        const card = e.target.closest('.card');
+        const idx = Array.from(list.children).indexOf(card);
+        const all = load();
+        const it = data[idx];
+        const actualIndex = all.findIndex(x=>x.id===it.id);
+        if(actualIndex>-1){ all[actualIndex].caption = e.target.value; save(all); }
+      });
+    });
+    list.querySelectorAll('[data-action="approve"]').forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        const card = e.target.closest('.card');
+        const idx = Array.from(list.children).indexOf(card);
+        const all = load();
+        const it = data[idx];
+        const actualIndex = all.findIndex(x=>x.id===it.id);
+        if(actualIndex>-1){ all[actualIndex].approved = !all[actualIndex].approved; save(all); render(); }
+      });
+    });
+    list.querySelectorAll('[data-action="delete"]').forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        if(!confirm('Delete this item?')) return;
+        const card = e.target.closest('.card');
+        const idx = Array.from(list.children).indexOf(card);
+        const all = load();
+        const it = data[idx];
+        save(all.filter(x=>x.id!==it.id));
+        render();
+      });
+    });
+    list.querySelectorAll('[data-action="reset"]').forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        const wrap = e.target.closest('.card');
+        const parentCard = wrap.previousElementSibling ? wrap.previousElementSibling.closest('.card') : null;
+        const idx = parentCard ? Array.from(list.children).indexOf(parentCard) : 0;
+        const all = load();
+        const it = data[idx];
+        const actualIndex = all.findIndex(x=>x.id===it.id);
+        if(actualIndex>-1 && all[actualIndex].type==="poll"){
+          all[actualIndex].poll.options = all[actualIndex].poll.options.map(o=>({ ...o, votes:0 }));
+          save(all); render();
+        }
+      });
+    });
+
+    // poll option text edits
+    list.querySelectorAll('[data-opt-idx]').forEach(inp=>{
+      inp.addEventListener("blur", e=>{
+        const idx = +e.target.getAttribute("data-opt-idx");
+        const card = e.target.closest('.card');
+        const parentCard = card.previousElementSibling ? card.previousElementSibling.closest('.card') : null;
+        const i = parentCard ? Array.from(list.children).indexOf(parentCard) : 0;
+        const all = load();
+        const it = data[i];
+        const actualIndex = all.findIndex(x=>x.id===it.id);
+        if(actualIndex>-1 && all[actualIndex].type==="poll"){
+          all[actualIndex].poll.options[idx].text = e.target.value; save(all);
+        }
+      });
+    });
+  }
+
+  function escapeHTML(s){ return (s||"").replace(/[&<>"'']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\'':'&#39;'}[c])); }
+})();
+</script>
+</body>
+</html>
