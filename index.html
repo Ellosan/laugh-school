@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laugh School</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#0b1220">
+</head>
+<body>
+<header class="nav">
+  <div class="brand">
+    <div class="logo">😂</div>
+    <div class="title">Laugh School</div>
+  </div>
+  <nav class="tabs">
+    <a class="tab active" data-tab="feed">Feed</a>
+    <a class="tab" data-tab="upload">Upload</a>
+    <a class="tab" href="admin.html">Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+  <section id="feed" class="section">
+    <div class="section-head">
+      <h2>Latest laughs</h2>
+      <p class="muted">Fresh drops from Laugh School</p>
+    </div>
+    <div id="feedGrid" class="grid"></div>
+  </section>
+
+  <section id="upload" class="section hidden">
+    <div class="section-head">
+      <h2>Upload</h2>
+      <p class="muted">Share an image, a short video, or create a poll. Submissions appear once approved by Admin.</p>
+    </div>
+
+    <div class="card">
+      <div class="field-row pill">
+        <button class="pill-btn active" data-mode="image">Image</button>
+        <button class="pill-btn" data-mode="video">Video</button>
+        <button class="pill-btn" data-mode="poll">Poll</button>
+      </div>
+
+      <div class="field">
+        <label>Title</label>
+        <input id="upTitle" placeholder="Add a catchy title" />
+      </div>
+
+      <div id="mediaFields">
+        <div class="field">
+          <label>Caption (optional)</label>
+          <input id="upCaption" placeholder="Say something funny" />
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <p class="muted">Drag & drop a <span id="modeLabel">image</span> file, or pick one</p>
+          <input type="file" id="fileInput" accept="image/*" />
+          <p id="fileName" class="muted tiny"></p>
+        </div>
+      </div>
+
+      <div id="pollFields" class="hidden">
+        <div class="field">
+          <label>Question (optional)</label>
+          <input id="pollQ" placeholder="What do you want to ask?" />
+        </div>
+        <div class="field">
+          <label>Options</label>
+          <div id="pollOpts"></div>
+          <button id="addOpt" class="btn subtle">+ Add option</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="submitBtn" class="btn primary">Submit</button>
+        <button id="clearBtn" class="btn">Clear</button>
+      </div>
+      <p class="muted tiny">Your submission will appear once approved by Admin.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  Built with ❤️ for memes. Client‑side demo only — add a backend for real use.
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

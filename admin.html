@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laugh School — Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav">
+  <div class="brand">
+    <div class="logo">😂</div>
+    <div class="title">Laugh School</div>
+  </div>
+  <nav class="tabs">
+    <a class="tab" href="index.html">Feed</a>
+    <a class="tab" href="index.html#upload">Upload</a>
+    <a class="tab active">Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+  <section class="section">
+    <div class="section-head">
+      <h2>Admin dashboard</h2>
+      <p class="muted">Approve, hide, edit, or delete content.</p>
+    </div>
+
+    <div id="authGate" class="card">
+      <p class="muted">Restricted area — enter password to continue.</p>
+      <div class="field-row">
+        <input id="adminPass" type="password" placeholder="Admin password" />
+        <button id="unlockBtn" class="btn primary">Unlock Admin</button>
+      </div>
+      <p class="tiny muted">Note: client‑side auth is for demos only.</p>
+    </div>
+
+    <div id="adminPanel" class="hidden">
+      <div class="toolbar">
+        <input id="searchBox" placeholder="Search…" />
+        <button id="signOut" class="btn">Sign out</button>
+      </div>
+      <div id="adminList" class="col"></div>
+    </div>
+  </section>
+</main>
+
+<script src="script.js"></script>
+<script>
+  window.__LAUGH_SCHOOL__.initAdmin();
+</script>
+</body>
+</html>
