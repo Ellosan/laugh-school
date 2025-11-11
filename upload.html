@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laugh School — Upload</title>
+  <meta name="theme-color" content="#0b1220">
+  <style>
+    :root{ --bg:#0b1220; --text:#e5e7eb; --muted:#9ca3af; --ring:#ffffff40; --border:#ffffff1a; }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b1220,#030712);color:var(--text);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    .container{max-width:900px;margin:0 auto;padding:24px 16px 64px}
+    .nav{position:sticky;top:0;backdrop-filter:blur(8px);background:#030712cc;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{height:36px;width:36px;border-radius:14px;background:#ffffff1a;display:grid;place-items:center;font-size:20px}
+    .title{font-weight:900;font-size:20px}
+    a.link{color:#fff;text-decoration:none;padding:8px 12px;border-radius:10px}
+    a.link:hover{background:#ffffff14}
+
+    .card{background:linear-gradient(180deg,#18203599,#0f172a99);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px #0008;padding:16px}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
+
+    .field{display:grid;gap:6px;margin:10px 0}
+    .field-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .pill{background:#ffffff0f;border:1px solid var(--border);border-radius:12px;padding:4px}
+    .pill-btn{border:0;background:transparent;color:#e5e7eb;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .pill-btn.active{background:#fff;color:#0f172a;font-weight:700}
+
+    input,button{font:inherit}
+    input{background:#ffffff10;border:1px solid var(--border);border-radius:10px;color:#e5e7eb;padding:10px;outline:none}
+    input:focus{box-shadow:0 0 0 3px var(--ring)}
+    .btn{background:#ffffff10;border:1px solid var(--border);color:#fff;border-radius:12px;padding:10px 16px;cursor:pointer}
+    .btn:hover{background:#ffffff18}
+    .btn.primary{background:#fff;color:#0f172a;border-color:#fff;font-weight:700}
+
+    .dropzone{border:1px dashed var(--border);padding:14px;border-radius:12px;text-align:center;background:#ffffff0f}
+  </style>
+</head>
+<body>
+<header class="nav">
+  <div class="brand">
+    <div class="logo">😂</div>
+    <div class="title">Laugh School</div>
+  </div>
+  <nav>
+    <a class="link" href="admin.html">Admin</a>
+  </nav>
+</header>
+
+<main class="container">
+  <h1>Upload</h1>
+  <p class="muted">Share an image, a short video, or create a poll. Submissions are <strong>pending</strong> until approved in Admin.</p>
+
+  <div class="card">
+    <div class="field-row pill">
+      <button class="pill-btn active" data-mode="image">Image</button>
+      <button class="pill-btn" data-mode="video">Video</button>
+      <button class="pill-btn" data-mode="poll">Poll</button>
+    </div>
+
+    <div class="field">
+      <label>Title</label>
+      <input id="upTitle" placeholder="Add a catchy title" />
+    </div>
+
+    <div id="mediaFields">
+      <div class="field">
+        <label>Caption (optional)</label>
+        <input id="upCaption" placeholder="Say something funny" />
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <p class="muted">Drag & drop a <span id="modeLabel">image</span> file, or pick one</p>
+        <input type="file" id="fileInput" accept="image/*" />
+        <p id="fileName" class="muted tiny"></p>
+      </div>
+    </div>
+
+    <div id="pollFields" class="hidden">
+      <div class="field">
+        <label>Question (optional)</label>
+        <input id="pollQ" placeholder="What do you want to ask?" />
+      </div>
+      <div class="field">
+        <label>Options</label>
+        <div id="pollOpts"></div>
+        <button id="addOpt" class="btn">+ Add option</button>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <button id="submitBtn" class="btn primary">Submit</button>
+      <button id="clearBtn" class="btn">Clear</button>
+    </div>
+    <p class="muted tiny">Your submission will appear once approved by Admin.</p>
+  </div>
+</main>
+
+<script>
+(function(){
+  const STORAGE_KEY = "laughschool_items_v1";
+  const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const nowISO = () => new Date().toISOString();
+
+  function save(items){ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+  function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]") }catch(e){ return [] } }
+
+  // UI refs
+  const upTitle = document.getElementById("upTitle");
+  const upCaption = document.getElementById("upCaption");
+  const fileInput = document.getElementById("fileInput");
+  const dropzone = document.getElementById("dropzone");
+  const fileName = document.getElementById("fileName");
+  const pollQ = document.getElementById("pollQ");
+  const pollOptsWrap = document.getElementById("pollOpts");
+  const addOptBtn = document.getElementById("addOpt");
+  const submitBtn = document.getElementById("submitBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const mediaFields = document.getElementById("mediaFields");
+  const pollFields = document.getElementById("pollFields");
+  const modeLabel = document.getElementById("modeLabel");
+  const pillBtns = document.querySelectorAll(".pill-btn");
+
+  let mode = "image";
+  pillBtns.forEach(btn=>btn.addEventListener("click", ()=>{
+    pillBtns.forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    mode = btn.getAttribute("data-mode");
+    modeLabel.textContent = mode;
+    mediaFields.classList.toggle("hidden", mode==="poll");
+    pollFields.classList.toggle("hidden", mode!=="poll");
+    fileInput.accept = mode==="image" ? "image/*" : "video/*";
+  }));
+
+  function renderPollOpts(arr){
+    pollOptsWrap.innerHTML = "";
+    arr.forEach((val,i)=>{
+      const row = document.createElement("div");
+      row.className = "field-row";
+      row.innerHTML = `
+        <input value="${escapeHTML(val)}" data-idx="${i}" placeholder="Option ${i+1}"/>
+        <button class="btn" data-remove="${i}">✕</button>
+      `;
+      pollOptsWrap.appendChild(row);
+    });
+  }
+  let pollOpts = ["😂","🤣","😹"]; renderPollOpts(pollOpts);
+
+  pollOptsWrap.addEventListener("input", e=>{
+    const idx = +e.target.getAttribute("data-idx");
+    if(!Number.isNaN(idx)) pollOpts[idx] = e.target.value;
+  });
+  pollOptsWrap.addEventListener("click", e=>{
+    const idx = +e.target.getAttribute("data-remove");
+    if(!Number.isNaN(idx)){ pollOpts.splice(idx,1); renderPollOpts(pollOpts); }
+  });
+  addOptBtn.addEventListener("click", ()=>{ pollOpts.push(""); renderPollOpts(pollOpts); });
+
+  fileInput.addEventListener("change", ()=>{
+    fileName.textContent = fileInput.files[0] ? `Selected: ${fileInput.files[0].name}` : "";
+  });
+  dropzone.addEventListener("dragover", e=>e.preventDefault());
+  dropzone.addEventListener("drop", e=>{
+    e.preventDefault();
+    if(e.dataTransfer.files[0]){
+      fileInput.files = e.dataTransfer.files;
+      fileName.textContent = `Selected: ${fileInput.files[0].name}`;
+    }
+  });
+
+  function escapeHTML(s){ return (s||"").replace(/[&<>"'']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\'':'&#39;'}[c])); }
+  function readAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+  function clear(){ upTitle.value=""; upCaption.value=""; fileInput.value=""; fileName.textContent=""; pollQ.value=""; pollOpts=["😂","🤣","😹"]; renderPollOpts(pollOpts); }
+
+  submitBtn.addEventListener("click", async ()=>{
+    const title = upTitle.value.trim();
+    if(!title){ alert("Please add a title"); return; }
+
+    const all = load();
+    if(mode === "poll"){
+      const options = pollOpts.map(s=>s.trim()).filter(Boolean).map(t=>({ text:t, votes:0 }));
+      if(options.length < 2){ alert("Add at least two poll options"); return; }
+      const item = { id: uid(), type:"poll", title, poll:{ question: (pollQ.value.trim()||title), options }, createdAt: nowISO(), approved:false, laughs:0 };
+      all.unshift(item); save(all); clear(); alert("Poll submitted! It will show after admin approval.");
+      return;
+    }
+
+    if(!fileInput.files[0]){ alert("Please choose a file"); return; }
+    const dataURL = await readAsDataURL(fileInput.files[0]);
+    const item = { id: uid(), type: mode, title, caption: upCaption.value.trim(), dataURL, createdAt: nowISO(), approved:false, laughs:0 };
+    all.unshift(item); save(all); clear(); alert("Submitted! Your post will appear once approved by Admin.");
+  });
+})();
+</script>
+</body>
+</html>
