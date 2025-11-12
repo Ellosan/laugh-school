@@ -1,0 +1,231 @@
+/* Laugh School Post Styles */
+
+.feed-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.post {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.post:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.post h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.4em;
+}
+
+.post img,
+.post video {
+  max-width: 100%;
+  width: 100%;
+  border-radius: 8px;
+  margin: 10px 0;
+  display: block;
+}
+
+.post video {
+  background: #000;
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.react-btn {
+  background: #FFD93D;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.react-btn:hover {
+  transform: scale(1.05);
+  background: #FFC700;
+  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.4);
+}
+
+.react-btn:active {
+  transform: scale(0.95);
+}
+
+.reaction-count {
+  transition: transform 0.2s;
+}
+
+.post-date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.poll-votes {
+  color: #666;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+/* Poll Styles */
+
+.poll-options {
+  margin: 15px 0;
+}
+
+.poll-option {
+  background: #f5f5f5;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.poll-option:hover {
+  background: #e8e8e8;
+  border-color: #FFD93D;
+}
+
+.option-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 217, 61, 0.3);
+  transition: width 0.5s ease;
+  z-index: 0;
+}
+
+.option-content {
+  position: relative;
+  z-index: 1;
+}
+
+.option-text {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.option-votes {
+  font-size: 0.85em;
+  color: #666;
+}
+
+/* Loading & Error States */
+
+.no-posts,
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.1em;
+}
+
+.error {
+  color: #d32f2f;
+}
+
+/* Form Styles */
+
+#mediaUploadForm,
+#pollCreationForm {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#mediaUploadForm input,
+#pollCreationForm input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+#mediaUploadForm input:focus,
+#pollCreationForm input:focus {
+  outline: none;
+  border-color: #FFD93D;
+}
+
+#mediaUploadForm button,
+#pollCreationForm button {
+  width: 100%;
+  padding: 14px;
+  background: #FFD93D;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#mediaUploadForm button:hover,
+#pollCreationForm button:hover {
+  background: #FFC700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4);
+}
+
+#mediaUploadForm button:disabled,
+#pollCreationForm button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+  .feed-container {
+    padding: 10px;
+  }
+
+  .post {
+    padding: 15px;
+  }
+
+  .post h3 {
+    font-size: 1.2em;
+  }
+
+  .post-actions {
+    gap: 10px;
+  }
+
+  #mediaUploadForm,
+  #pollCreationForm {
+    padding: 15px;
+  }
+}
